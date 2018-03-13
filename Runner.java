@@ -57,12 +57,14 @@ public class Runner {
             }
             System.out.println("|UserInput|\nreadLength:\t" + readLength + "\nfrLengthMean:\t" + frLengthMean + "\nSD:\t" + SD + "\nreadcounts:\t" + readcounts.toString() + "\nmutationrate:\t" + mutationrate + "\nfasta:\t" + fasta.toString() + "\nfidx:\t" + fidx.toString() + "\ngtf:\t" + gtf.toString() + "\nod:\t" + od.toString());
         }
+
         // Object[0] = String gene_id, Object[1] = String transcript_id, Object[2] = Integer count
         ArrayList<Object[]> allReadcounts = parseReadcounts(readcounts);
 
+        // ---Parse GTF---
         GSE gse = new GSE(fasta, fidx, gtf);
 
-        // For every ReadcountLine, there's one outputLine containing readsFw, readsRw, readMappingInfo
+        // ---For every ReadcountLine, there's one outputLine containing readsFw, readsRw, readMappingInfo--
         ArrayList<OutputLines> outLines = new ArrayList<>();
         for (Object[] obj : allReadcounts) {
             String gene_id = (String) obj[0];
@@ -71,7 +73,7 @@ public class Runner {
             outLines.add(getOutputLines(gene_id, transcript_id, counts, gse, frLengthMean, SD, readLength, mutationrate));
         }
 
-
+        // ---Write OutputLines---
         Boolean append = false;
         int counter = 0;
         for (OutputLines line : outLines) {
@@ -80,8 +82,8 @@ public class Runner {
             append = true;
         }
 
-        // File gzip = new File("C:\\Users\\Gabriel\\Desktop\\GoBI\\Blatt2\\Homo_sapiens.GRCh37.75.cdna.all.fa.gz");
-        // GSE.checkTranscript("ENST00000515242", gzip);
+         File gzip = new File("C:\\Users\\Gabriel\\Desktop\\GoBI\\Blatt2\\Homo_sapiens.GRCh37.75.cdna.all.fa.gz");
+         GSE.checkTranscriptOccurenceInGzip("ENST00000515242", gzip);
         System.out.println("End of main method.");
     }
 
@@ -102,7 +104,6 @@ public class Runner {
 
         for (int j = 0; j < counts; j++) {
             // TODO
-            // j = counts;
             // Get FL from max(readlength, ND(mean, SD))
             int fragmentLength = GSE.getFragmentLength(frLengthMean, SD, readLength, transcriptSequence.length());
             // random fragmentPosition from 0 to length(t) - FL
