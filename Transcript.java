@@ -1,9 +1,14 @@
 import java.util.TreeSet;
 
-public class Transcript{
+public class Transcript {
     public String transcript_id;
     // String = exon Ids
-    public TreeSet<Exon> exons = new TreeSet<Exon>(new Exon());
+    public TreeSet<Exon> exons = new TreeSet<>(new Exon());
+
+    // Default Constructor
+    public Transcript() {
+        super();
+    }
 
     // Constructor
     public Transcript(String transcript_id, TreeSet<Exon> exons) {

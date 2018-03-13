@@ -1,10 +1,14 @@
 import java.util.HashMap;
 
 public class Gene {
-
     public String gene_id;
-    // String = transcript Ids
-    public HashMap<String, Transcript> transcripts = new HashMap<String, Transcript>();
+    // Key = transcript_Ids
+    public HashMap<String, Transcript> transcripts = new HashMap<>();
+
+    // Default Constructor
+    public Gene() {
+        super();
+    }
 
     // Constructor
     public Gene(String gene_id, HashMap<String, Transcript> transcripts) {
@@ -19,7 +23,7 @@ public class Gene {
         for (HashMap.Entry<String, Transcript> t : another.transcripts.entrySet()) {
             this.transcripts.put(t.getKey(), new Transcript(t.getValue()));
         }
-        this.gene_id = new String(another.gene_id);
+        this.gene_id = another.gene_id;
     }
 
 
