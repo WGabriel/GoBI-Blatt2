@@ -62,6 +62,8 @@ public class Exon implements Comparator<Exon> {
         } else if (e1.exon_number < e2.exon_number) {
             return -1;
         } else {
+            if (!e1.exon_id.equals(e2.exon_id))
+                System.err.println("Found two equally enumerated exons: " + e1.exon_id + " and " + e2.exon_id);
             return 0;
         }
     }

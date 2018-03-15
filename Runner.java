@@ -64,6 +64,10 @@ public class Runner {
         // ---Parse GTF---
         GSE gse = new GSE(fasta, fidx, gtf);
 
+        // System.out.println("Checking if Transcript occurs in gzip...");
+        // File gzip = new File("C:\\Users\\Gabriel\\Desktop\\GoBI\\Blatt2\\Homo_sapiens.GRCh37.75.cdna.all.fa.gz");
+        // GSE.checkTranscriptOccurenceInGzip("ENST00000515242", gzip);
+
         // ---For every ReadcountLine, there's one outputLine containing readsFw, readsRw, readMappingInfo--
         ArrayList<OutputLines> outLines = new ArrayList<>();
         for (Object[] obj : allReadcounts) {
@@ -76,18 +80,17 @@ public class Runner {
         // ---Write OutputLines---
         Boolean append = false;
         int counter = 0;
+        System.out.println("Writing Output Lines...");
         for (OutputLines line : outLines) {
             // append to files
             counter = writeOutputLines(line, od, append, counter);
             append = true;
         }
-
-         File gzip = new File("C:\\Users\\Gabriel\\Desktop\\GoBI\\Blatt2\\Homo_sapiens.GRCh37.75.cdna.all.fa.gz");
-         GSE.checkTranscriptOccurenceInGzip("ENST00000515242", gzip);
         System.out.println("End of main method.");
     }
 
-    private static OutputLines getOutputLines(String gene_id, String transcript_id, int counts, GSE gse, int frLengthMean, int SD, int readLength, double mutationrate) {
+    private static OutputLines getOutputLines(String gene_id, String transcript_id, int counts, GSE gse, int frLengthMean,
+                                              int SD, int readLength, double mutationrate) {
         ArrayList<String> readsFw = new ArrayList<>();
         ArrayList<String> readsRw = new ArrayList<>();
         ArrayList<String> readMappingInfo = new ArrayList<>();
@@ -102,6 +105,9 @@ public class Runner {
             referenceExon = new Exon(e);
         }
 
+        System.out.println("TRANSCRIPT: " + referenceExon.transcript_id + " in Gene: " + referenceExon.gene_id + " seq: " + transcriptSequence);
+//        counts = 10;
+
         for (int j = 0; j < counts; j++) {
             // TODO
             // Get FL from max(readlength, ND(mean, SD))
@@ -115,29 +121,34 @@ public class Runner {
             String readFw = GSE.getReadSequence(fragmentSeq, readLength, false);
             String readRw = GSE.getReadSequence(fragmentSeq, readLength, true);
             // simulate mutations with required rate
-            String[] mutatedReadFw = GSE.simulateMutations(readFw, mutationrate);
-            String[] mutatedReadRw = GSE.simulateMutations(readRw, mutationrate);
+//            String[] mutatedReadFw = GSE.simulateMutations(readFw, mutationrate);
+//            String[] mutatedReadRw = GSE.simulateMutations(readRw, mutationrate);
+//
+//            readsFw.add(mutatedReadFw[0]);
+//            readsRw.add(mutatedReadRw[0]);
 
-            readsFw.add(mutatedReadFw[0]);
-            readsRw.add(mutatedReadRw[0]);
+            String[] tempReadFw = {readFw, ""};
+            String[] tempReadRw = {readRw, ""};
+            readsFw.add(tempReadFw[0]);
+            readsRw.add(tempReadRw[0]);
 
             // readid chr gene transcript t_fw_regvec t_rw_regvec fw_regvec rw_regvec fw_mut rw_mut 0 19 ENSG00000104870 ENST00000221466 810-885 854-929 50017390-50017391|50017468-50017542 50017511-50017586 55
-            int tFwRegVecStart = fragmentStart - 1;
-            int tFwRegVecEnd = fragmentStart + readLength - 1;
-            int tRwRegVecStart = fragmentStart + fragmentLength - readLength - 1;
-            int tRwRegVecEnd = fragmentStart + fragmentLength - 1;
+            int tFwRegVecStart = fragmentStart;
+            int tFwRegVecEnd = fragmentStart + readLength;
+            int tRwRegVecStart = fragmentStart + fragmentLength - readLength;
+            int tRwRegVecEnd = fragmentStart + fragmentLength;
 
-            int fwRegVecStart = gse.getGenomicPosition(transcript_id, gene_id, fragmentStart);
-            // System.out.println("getGenomicPosition for fwRegVecStart: " + (fragmentStart));
-            int fwRegVecEnd = gse.getGenomicPosition(transcript_id, gene_id, (fragmentStart + readLength));
-            // System.out.println("getGenomicPosition for fwRegVecEnd: " + (fragmentStart + readLength));
-            int rwRegVecStart = gse.getGenomicPosition(transcript_id, gene_id, (fragmentStart + fragmentLength - readLength));
-            // System.out.println("getGenomicPosition for rwRegVecStart: " + (fragmentStart + fragmentLength - readLength));
-            int rwRegVecEnd = gse.getGenomicPosition(transcript_id, gene_id, (fragmentStart + fragmentLength));
-            // System.out.println("getGenomicPosition for rwRegVecEnd: " + (fragmentStart + fragmentLength));
+//            int fwRegVecStart = gse.getGenomicPosition(transcript_id, gene_id, tFwRegVecStart);
+//            int fwRegVecEnd = gse.getGenomicPosition(transcript_id, gene_id, tFwRegVecEnd);
+//            int rwRegVecStart = gse.getGenomicPosition(transcript_id, gene_id, tRwRegVecStart);
+//            int rwRegVecEnd = gse.getGenomicPosition(transcript_id, gene_id, tRwRegVecEnd);
 
-            String mappingInfo = referenceExon.chr + "\t" + referenceExon.gene_id + "\t" + referenceExon.transcript_id + "\t" + tFwRegVecStart + "-" + tFwRegVecEnd + "\t"
-                    + tRwRegVecStart + "-" + tRwRegVecEnd + "\t" + fwRegVecStart + "-" + fwRegVecEnd + "\t" + rwRegVecStart + "-" + rwRegVecEnd + "\t" + mutatedReadFw[1] + "\t" + mutatedReadRw[1];
+            String fwRegVec = gse.getGenomicRegionPosition(transcript_id, gene_id, tFwRegVecStart, tFwRegVecEnd);
+            String rwRegVec = gse.getGenomicRegionPosition(transcript_id, gene_id, tRwRegVecStart, tRwRegVecEnd);
+
+            String mappingInfo = referenceExon.chr + "\t" + referenceExon.gene_id + "\t" + referenceExon.transcript_id
+                    + "\t" + tFwRegVecStart + "-" + tFwRegVecEnd + "\t" + tRwRegVecStart + "-" + tRwRegVecEnd + "\t"
+                    + fwRegVec + "\t" + rwRegVec + "\t" + tempReadFw[1] + "\t" + tempReadRw[1];
             readMappingInfo.add(mappingInfo);
             // System.out.println("readFw: " + readFw + "(" + readFw.length() + ") mutated to " + mutatedReadFw[0] + "(" + mutatedReadFw[0].length() + ")");
             // System.out.println("readRw: " + readRw + "(" + readRw.length() + ") mutated to " + mutatedReadRw[0] + "(" + mutatedReadRw[0].length() + ")");
@@ -147,7 +158,7 @@ public class Runner {
     }
 
     public static int writeOutputLines(OutputLines line, File od, Boolean append, int counter) {
-        System.out.println("Begin: writeOutputLines. Append: " + append);
+        // System.out.println("Begin: writeOutputLines. Append: " + append);
         // System.out.println("\tWriting fw.fastq...");
         try {
             int fwCounter = counter;
@@ -218,7 +229,7 @@ public class Runner {
                 obj[0] = line.split("\\t")[0]; // gene_id
                 obj[1] = line.split("\\t")[1]; // transcript_id
                 obj[2] = Integer.parseInt(line.split("\\t")[2]); // counts
-                System.out.println("Readcount line: " + linecounter + " gene:" + obj[0] + " transcript: " + obj[1] + " counts: " + obj[2]);
+                // System.out.println("Readcount line: " + linecounter + " gene:" + obj[0] + " transcript: " + obj[1] + " counts: " + obj[2]);
                 linecounter++;
                 result.add(obj.clone());
             }
