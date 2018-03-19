@@ -3,10 +3,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.TreeSet;
+import java.util.*;
 
 public class GSE {
     // Genome Sequence Extractor
@@ -148,21 +145,42 @@ public class GSE {
         return result;
     }
 
-    public int getGenomicPosition(String transcriptId, String geneId, int positionInTranscript) {
-        // return the position on the gene of a position on a transcript
-        // go through all exons and reduce positionInTranscript every time we pass an exon
+    public int getGenomicPosition(String transcriptId, String geneId, int positionInTranscript, boolean start, String strand) {
+        // return the position on the gene of a position on a transcript. Go through all exons and reduce positionInTranscript every time we pass an exon
+        // if boolean start = true --> positionInTranscript differs by 1
         TreeSet<Exon> exons = this.genes.get(geneId).transcripts.get(transcriptId).exons;
-        for (Exon exon : exons) {
-            int exonLength = exon.end - exon.start;
-            if (exonLength < 1) {
-                System.err.println("Length cannot be < 1");
+
+        if (strand.equals("+")) {
+            for (Exon exon : exons) {
+                int exonLength = exon.end - exon.start;
+                if (exonLength < 1)
+                    System.err.println("Length cannot be < 1");
+                if (exonLength < positionInTranscript)
+                    positionInTranscript -= exonLength;
+                else if (exonLength == positionInTranscript && !start)
+                    return exon.end + 1;
+                else if (exonLength == positionInTranscript && start)
+                    positionInTranscript = 0;
+                else
+                    return exon.start + positionInTranscript + 1;
             }
-            if (exonLength < positionInTranscript)
-                positionInTranscript -= exonLength;
-            else {
-                return exon.start + positionInTranscript + 1;
+        } else if (strand.equals("-")) {
+            for (Exon exon : exons) {
+                int exonLength = exon.end - exon.start;
+                if (exonLength < 1)
+                    System.err.println("Length cannot be < 1");
+                if (exonLength < positionInTranscript)
+                    positionInTranscript -= exonLength;
+                else if (exonLength == positionInTranscript && !start)
+                    return exon.start + 1;
+                else if (exonLength == positionInTranscript && start)
+                    positionInTranscript = 0;
+                else
+                    return exon.end - positionInTranscript + 1;
             }
-        }
+        } else
+            System.err.println("|getGenomicPosition| Strand: " + strand + " not found.");
+
         System.err.println("|getGenomicPosition| positionInTranscript " + positionInTranscript + " not found. geneId: " + geneId + " transcriptId: " + transcriptId);
         return 0;
     }
@@ -175,17 +193,49 @@ public class GSE {
             genomicEnd = temp;
         }
         String res = "";
-        TreeSet<Exon> exons = this.genes.get(geneId).transcripts.get(transcriptId).exons;
-        for (Exon exon : exons) {
-            if (exon.end > genomicStart) {
-                if (exon.end < genomicEnd) {
-                    res += exon.start + "-" + (exon.end + 1) + "|";
-                } else {
-                    res += (exon.start + 1) + "-" + genomicEnd;
-                    break;
+
+        // TreeSet<Exon> exons = this.genes.get(geneId).transcripts.get(transcriptId).exons;
+
+        // Sorts Exons ascending to their start-points
+        Set<Exon> exons = new TreeSet<>((e1, e2) -> {
+            if (e1.start > e2.start) {
+                return 1;
+            } else return -1;
+        });
+        exons.addAll(this.genes.get(geneId).transcripts.get(transcriptId).exons);
+
+//        if (strand.equals("+")) {
+            for (Exon exon : exons) {
+                if (exon.end >= genomicStart) {
+                    if (exon.end < genomicEnd - 1) {
+                        res += exon.start + "-" + (exon.end + 1) + "|";
+                    } else if (exon.end == genomicEnd - 1) {
+                        res += exon.start + "-" + (exon.end + 1);
+                        break;
+                    } else {
+                        res += (exon.start + 1) + "-" + genomicEnd;
+                        break;
+                    }
                 }
             }
-        }
+//        } else if (strand.equals("-")) {
+//            for (Exon exon : exons) {
+//                if (exon.end >= genomicStart) {
+//                    if (exon.end < genomicEnd - 1) {
+//                        res += exon.start + "-" + (exon.end + 1) + "|";
+//                    } else if (exon.end == genomicEnd - 1) {
+//                        res += exon.start + "-" + (exon.end + 1);
+//                        break;
+//                    } else {
+//                        res += (exon.start + 1) + "-" + genomicEnd;
+//                        break;
+//                    }
+//                }
+//            }
+//        } else
+//            System.err.println("|getGenomicRegionPosition| Strand: " + strand + " not found.");
+
+
         res = res.substring(res.indexOf("-"), res.length());
         res = genomicStart + res;
         //System.err.println("Genomic region not found for " + transcriptId + " in gene: " + geneId);

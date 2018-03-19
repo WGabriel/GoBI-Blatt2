@@ -65,26 +65,46 @@ public class Runner {
         GSE gse = new GSE(fasta, fidx, gtf);
 
         // ----------------------------
-//        TreeSet<Exon> exonsInTranscript = gse.getExonsByTranscriptAndGene("ENST00000374525", "ENSG00000241978");
-//        String transcriptSequence = "";
-//        Exon referenceExon = null;
-//        for (Exon e : exonsInTranscript) {
-//            String s = gse.getSequence(e.chr, e.start, e.end, e.strand);
-//            transcriptSequence = transcriptSequence.concat(s);
-//            referenceExon = new Exon(e);
-//        }
-//        String fragmentSeq = transcriptSequence.substring(2652, 2777);
+//        String geneId = "ENSG00000241978";
+//        String transcriptId = "ENST00000374525";
+//        TreeSet<Exon> exonsInTranscript = gse.getExonsByTranscriptAndGene(transcriptId, geneId);
+////        String transcriptSequence = "";
+////        Exon referenceExon = null;
+////        for (Exon e : exonsInTranscript) {
+////            String s = gse.getSequence(e.chr, e.start, e.end, e.strand);
+////            transcriptSequence = transcriptSequence.concat(s);
+////            referenceExon = new Exon(e);
+////        }
+////        String fragmentSeq = transcriptSequence.substring(2652, 2777);
+////        String readFw = GSE.getReadSequence(fragmentSeq, 75, false);
+////        String readRw = GSE.getReadSequence(fragmentSeq, 75, true);
 //
-//        String readFw = GSE.getReadSequence(fragmentSeq, 75, false);
-//        String readRw = GSE.getReadSequence(fragmentSeq, 75, true);
+//        int fwRegVecStart = gse.getGenomicPosition(transcriptId, geneId, 2677, true, "+");
+//        System.out.println();
+//        int fwRegVecEnd = gse.getGenomicPosition(transcriptId, geneId, 2752, false, "+");
+//        System.out.println();
+//        int rwRegVecStart = gse.getGenomicPosition(transcriptId, geneId, 2573, true, "+");
+//        System.out.println();
+//        int rwRegVecEnd = gse.getGenomicPosition(transcriptId, geneId, 2648, false, "+");
+//        System.out.println();
 //
-//        int fwRegVecStart = gse.getGenomicPosition("ENST00000374525", "ENSG00000241978", 2652);
-//        int fwRegVecEnd = gse.getGenomicPosition("ENST00000374525", "ENSG00000241978", 2727);
-//        int rwRegVecStart = gse.getGenomicPosition("ENST00000374525", "ENSG00000241978", 2702);
-//        int rwRegVecEnd = gse.getGenomicPosition("ENST00000374525", "ENSG00000241978", 2777);
-////
-//        String genomicFwRegion = gse.getGenomicRegionPosition("ENST00000374525", "ENSG00000241978", fwRegVecStart, fwRegVecEnd);
-//        String genomicRwRegion = gse.getGenomicRegionPosition("ENST00000374525", "ENSG00000241978", rwRegVecStart, rwRegVecEnd);
+//        String genomicFwRegion = gse.getGenomicRegionPosition(transcriptId, geneId, fwRegVecStart, fwRegVecEnd, "+");
+//        String genomicRwRegion = gse.getGenomicRegionPosition(transcriptId, geneId, rwRegVecStart, rwRegVecEnd, "+");
+//
+//        geneId = "ENSG00000160767";
+//        transcriptId = "ENST00000361361";
+//        int startTest = gse.getGenomicPosition(transcriptId, geneId, 2682, true, "-");
+//        System.out.println();
+//        int endTest = gse.getGenomicPosition(transcriptId, geneId, 2757, false, "-");
+//        System.out.println();
+//        String genomicTest = gse.getGenomicRegionPosition(transcriptId, geneId, startTest, endTest, "-");
+//
+//        startTest = gse.getGenomicPosition(transcriptId, geneId, 739, true, "-");
+//        System.out.println();
+//        endTest = gse.getGenomicPosition(transcriptId, geneId, 814, false, "-");
+//        System.out.println();
+//        genomicTest = gse.getGenomicRegionPosition(transcriptId, geneId, startTest, endTest, "-");
+//
 //        System.exit(1);
         // ----------------------------
 
@@ -133,7 +153,6 @@ public class Runner {
         // counts = 10;
 
         for (int j = 0; j < counts; j++) {
-            // TODO
             // Get FL from max(readlength, ND(mean, SD))
             int fragmentLength = GSE.getFragmentLength(frLengthMean, SD, readLength, transcriptSequence.length());
             // random fragmentPosition from 0 to length(t) - FL
@@ -162,10 +181,10 @@ public class Runner {
             int tRwRegVecStart = fragmentStart + fragmentLength - readLength;
             int tRwRegVecEnd = fragmentStart + fragmentLength;
 
-            int fwRegVecStart = gse.getGenomicPosition(transcript_id, gene_id, tFwRegVecStart);
-            int fwRegVecEnd = gse.getGenomicPosition(transcript_id, gene_id, tFwRegVecEnd);
-            int rwRegVecStart = gse.getGenomicPosition(transcript_id, gene_id, tRwRegVecStart);
-            int rwRegVecEnd = gse.getGenomicPosition(transcript_id, gene_id, tRwRegVecEnd);
+            int fwRegVecStart = gse.getGenomicPosition(transcript_id, gene_id, tFwRegVecStart, true, referenceExon.strand);
+            int fwRegVecEnd = gse.getGenomicPosition(transcript_id, gene_id, tFwRegVecEnd, false, referenceExon.strand);
+            int rwRegVecStart = gse.getGenomicPosition(transcript_id, gene_id, tRwRegVecStart, true, referenceExon.strand);
+            int rwRegVecEnd = gse.getGenomicPosition(transcript_id, gene_id, tRwRegVecEnd, false, referenceExon.strand);
 
             String fwRegVec = gse.getGenomicRegionPosition(transcript_id, gene_id, fwRegVecStart, fwRegVecEnd, referenceExon.strand);
             String rwRegVec = gse.getGenomicRegionPosition(transcript_id, gene_id, rwRegVecStart, rwRegVecEnd, referenceExon.strand);
