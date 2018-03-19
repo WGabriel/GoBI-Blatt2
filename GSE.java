@@ -90,10 +90,10 @@ public class GSE {
     public static int getFragmentLength(int mean, int standardDeviation, int readLength, int transcriptLength) {
         // returns a value from a normal distribution with a given mean and standardDeviation
         Random r = new Random();
-        double number = r.nextGaussian() * standardDeviation + mean;
+        double number = r.nextGaussian() * (standardDeviation + 10) + mean;
         // re-draws number, if smaller then readLength or larger then transcriptLength
         while (number < readLength || number > transcriptLength)
-            number = r.nextGaussian() * standardDeviation + mean;
+            number = getFragmentLength(mean, standardDeviation, readLength, transcriptLength);
         return (int) number;
     }
 
@@ -116,12 +116,11 @@ public class GSE {
         // result[0] = mutatedSeq, result[1] = cs positions of mutated chars
         String[] result = {"", ""};
 
-        // go through all chars in sequence. select a random number [0,100]
-        // if this number <= mutationrate: mutate the current char
+        // go through all chars in sequence. select a random number [0,100]. If this number <= mutationrate: mutate the current char
         StringBuilder mutatedSeq = new StringBuilder(sequence);
         for (int i = 0; i < sequence.length(); i++) {
             int randomNumber = new Random().nextInt(100);
-            if (randomNumber <= mutationratePercent) {
+            if (randomNumber <= (mutationratePercent - 1)) {
                 result[1] = result[1].concat(i + ",");
                 if (mutatedSeq.charAt(i) == 'A') {
                     mutatedSeq.setCharAt(i, 'G');
@@ -137,10 +136,8 @@ public class GSE {
                 }
             }
         }
-        if (!result[1].isEmpty()) {
-            // trimm comma
-            result[1] = result[1].substring(0, result[1].length() - 1);
-        }
+        if (!result[1].isEmpty())
+            result[1] = result[1].substring(0, result[1].length() - 1); // trimm comma
         result[0] = new String(mutatedSeq);
         return result;
     }
@@ -185,135 +182,39 @@ public class GSE {
         return 0;
     }
 
-    public String getGenomicRegionPosition(String transcriptId, String geneId, int genomicStart, int genomicEnd, String strand) {
-        // eventually, swap start<->end
-        if (genomicStart > genomicEnd) {
+    public String getGenomicRegionPosition(String transcriptId, String geneId, int genomicStart, int genomicEnd) {
+        if (genomicStart > genomicEnd) { // eventually, swap start<->end
             int temp = genomicStart;
             genomicStart = genomicEnd;
             genomicEnd = temp;
         }
         String res = "";
-
         // TreeSet<Exon> exons = this.genes.get(geneId).transcripts.get(transcriptId).exons;
-
-        // Sorts Exons ascending to their start-points
-        Set<Exon> exons = new TreeSet<>((e1, e2) -> {
+        Set<Exon> exons = new TreeSet<>((e1, e2) -> { // Sorts Exons ascending to their start-points
             if (e1.start > e2.start) {
                 return 1;
             } else return -1;
         });
         exons.addAll(this.genes.get(geneId).transcripts.get(transcriptId).exons);
 
-//        if (strand.equals("+")) {
-            for (Exon exon : exons) {
-                if (exon.end >= genomicStart) {
-                    if (exon.end < genomicEnd - 1) {
-                        res += exon.start + "-" + (exon.end + 1) + "|";
-                    } else if (exon.end == genomicEnd - 1) {
-                        res += exon.start + "-" + (exon.end + 1);
-                        break;
-                    } else {
-                        res += (exon.start + 1) + "-" + genomicEnd;
-                        break;
-                    }
+        for (Exon exon : exons) {
+            if (exon.end >= genomicStart) {
+                if (exon.end < genomicEnd - 1) {
+                    res += (exon.start + 1) + "-" + (exon.end + 1) + "|";
+                } else if (exon.end == genomicEnd - 1) {
+                    res += (exon.start + 1) + "-" + (exon.end + 1);
+                    break;
+                } else {
+                    res += (exon.start + 1) + "-" + genomicEnd;
+                    break;
                 }
             }
-//        } else if (strand.equals("-")) {
-//            for (Exon exon : exons) {
-//                if (exon.end >= genomicStart) {
-//                    if (exon.end < genomicEnd - 1) {
-//                        res += exon.start + "-" + (exon.end + 1) + "|";
-//                    } else if (exon.end == genomicEnd - 1) {
-//                        res += exon.start + "-" + (exon.end + 1);
-//                        break;
-//                    } else {
-//                        res += (exon.start + 1) + "-" + genomicEnd;
-//                        break;
-//                    }
-//                }
-//            }
-//        } else
-//            System.err.println("|getGenomicRegionPosition| Strand: " + strand + " not found.");
-
+        }
 
         res = res.substring(res.indexOf("-"), res.length());
         res = genomicStart + res;
-        //System.err.println("Genomic region not found for " + transcriptId + " in gene: " + geneId);
         return res;
     }
-
-//    public String getGenomicRegionPositionALT(String transcriptId, String geneId, int startInTranscript, int endInTranscript) {
-//        if (startInTranscript > endInTranscript) { // sometimes, start and end are swapped
-//            int temp = startInTranscript;
-//            startInTranscript = endInTranscript;
-//            endInTranscript = temp;
-//        }
-//        // go through all exons and reduce start/endInTranscript every time we pass an exon
-//        TreeSet<Exon> exons = this.genes.get(geneId).transcripts.get(transcriptId).exons;
-//        // find genomicStartPosition
-//        int exonNumber = -1;
-//        int genomicStartPositon = -1;
-//        for (Exon exon : exons) {
-//            int exonLength = exon.end - exon.start;
-//            if (exonLength <= startInTranscript) {
-//                startInTranscript -= exonLength;
-//            } else {
-//                genomicStartPositon = exon.start + startInTranscript;
-//                exonNumber = exon.exon_number;
-//                break;
-//            }
-//        }
-//        if (genomicStartPositon < 0 || exonNumber < 1)
-//            System.err.println("Genomic Start Position or Exon Number cannot be <0.");
-//        // find genomicEndPosition (and all Exons in between)
-//        ArrayList<Integer[]> result = new ArrayList<>();
-//        for (Exon exon : exons) {
-//            int exonLength = exon.end - exon.start;
-//            if (exonLength < endInTranscript) {
-//                result.add(new Integer[]{exon.start, exon.end});
-//                endInTranscript -= exonLength;
-//            } else if (exonLength == endInTranscript) {
-//                result.add(new Integer[]{exon.start, exon.end});
-//                break;
-//            } else {
-//                result.add(new Integer[]{exon.start, exon.start + endInTranscript});
-//                break;
-//            }
-//        }
-//        // Exemplary output: 50017390-50017391|50017468-50017542
-//        // convert result-Array to String
-//        // ignore all passed exons before the exon containing the start position
-//        String output = String.valueOf(genomicStartPositon);
-//        for (int i = exonNumber - 1; i < result.size(); i++) {
-//            if (i == exonNumber - 1) //First Integer[]
-//                output += "-" + result.get(i)[1];
-//            else
-//                output += "|" + result.get(i)[0] + "-" + result.get(i)[1];
-//        }
-//        if (genomicStartPositon == result.get(exonNumber - 1)[1])
-//            System.err.println("genomicStartPosition: " + genomicStartPositon);
-//        return output;
-//    }
-
-
-//    public static void checkTranscriptOccurenceInGzip(String transcriptId, File gzip) {
-//        try {
-//            // looking for lines starting with >transcriptId
-//            InputStream gzipStream = new GZIPInputStream(new FileInputStream(gzip));
-//            BufferedReader br = new BufferedReader(new InputStreamReader(gzipStream, "UTF-8"));
-//            String line;
-//            while ((line = br.readLine()) != null) {
-//                if (line.startsWith(">")) {
-//                    // System.out.println(line);
-//                    if (line.startsWith(">" + transcriptId))
-//                        System.out.println("Line: " + line);
-//                }
-//            }
-//            br.close();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     private HashMap<String, long[]> parseIdx(File idx) {
         // Go through idx file & fetch start and length for a chromosome
@@ -406,10 +307,9 @@ public class GSE {
                         }
                         exonCounter++;
                         allGenes.get(e.gene_id).transcripts.get(e.transcript_id).exons.add(new Exon(e));
-//                        if(e.exon_number==3 && e.strand.equals("-")){
-//                            System.out.println("Transcript: "+e.transcript_id+" Exon id: "+e.exon_id+" Gene: "+e.gene_id);
-//                        }
-
+                        /*if(e.exon_number==3 && e.strand.equals("-")){
+                            System.out.println("Transcript: "+e.transcript_id+" Exon id: "+e.exon_id+" Gene: "+e.gene_id);
+                        }*/
                     }
                 }
             }

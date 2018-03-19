@@ -64,54 +64,7 @@ public class Runner {
         // ---Parse GTF---
         GSE gse = new GSE(fasta, fidx, gtf);
 
-        // ----------------------------
-//        String geneId = "ENSG00000241978";
-//        String transcriptId = "ENST00000374525";
-//        TreeSet<Exon> exonsInTranscript = gse.getExonsByTranscriptAndGene(transcriptId, geneId);
-////        String transcriptSequence = "";
-////        Exon referenceExon = null;
-////        for (Exon e : exonsInTranscript) {
-////            String s = gse.getSequence(e.chr, e.start, e.end, e.strand);
-////            transcriptSequence = transcriptSequence.concat(s);
-////            referenceExon = new Exon(e);
-////        }
-////        String fragmentSeq = transcriptSequence.substring(2652, 2777);
-////        String readFw = GSE.getReadSequence(fragmentSeq, 75, false);
-////        String readRw = GSE.getReadSequence(fragmentSeq, 75, true);
-//
-//        int fwRegVecStart = gse.getGenomicPosition(transcriptId, geneId, 2677, true, "+");
-//        System.out.println();
-//        int fwRegVecEnd = gse.getGenomicPosition(transcriptId, geneId, 2752, false, "+");
-//        System.out.println();
-//        int rwRegVecStart = gse.getGenomicPosition(transcriptId, geneId, 2573, true, "+");
-//        System.out.println();
-//        int rwRegVecEnd = gse.getGenomicPosition(transcriptId, geneId, 2648, false, "+");
-//        System.out.println();
-//
-//        String genomicFwRegion = gse.getGenomicRegionPosition(transcriptId, geneId, fwRegVecStart, fwRegVecEnd, "+");
-//        String genomicRwRegion = gse.getGenomicRegionPosition(transcriptId, geneId, rwRegVecStart, rwRegVecEnd, "+");
-//
-//        geneId = "ENSG00000160767";
-//        transcriptId = "ENST00000361361";
-//        int startTest = gse.getGenomicPosition(transcriptId, geneId, 2682, true, "-");
-//        System.out.println();
-//        int endTest = gse.getGenomicPosition(transcriptId, geneId, 2757, false, "-");
-//        System.out.println();
-//        String genomicTest = gse.getGenomicRegionPosition(transcriptId, geneId, startTest, endTest, "-");
-//
-//        startTest = gse.getGenomicPosition(transcriptId, geneId, 739, true, "-");
-//        System.out.println();
-//        endTest = gse.getGenomicPosition(transcriptId, geneId, 814, false, "-");
-//        System.out.println();
-//        genomicTest = gse.getGenomicRegionPosition(transcriptId, geneId, startTest, endTest, "-");
-//
-//        System.exit(1);
-        // ----------------------------
-
-
-        // System.out.println("Checking if Transcript occurs in gzip...");
-        // File gzip = new File("C:\\Users\\Gabriel\\Desktop\\GoBI\\Blatt2\\Homo_sapiens.GRCh37.75.cdna.all.fa.gz");
-        // GSE.checkTranscriptOccurenceInGzip("ENST00000515242", gzip);
+        testCases(gse);
 
         // ---For every ReadcountLine, there's one outputLine containing readsFw, readsRw, readMappingInfo--
         ArrayList<OutputLines> outLines = new ArrayList<>();
@@ -150,7 +103,6 @@ public class Runner {
             referenceExon = new Exon(e);
         }
         //System.out.println("TRANSCRIPT: " + referenceExon.transcript_id + " in Gene: " + referenceExon.gene_id + " seq: " + transcriptSequence);
-        // counts = 10;
 
         for (int j = 0; j < counts; j++) {
             // Get FL from max(readlength, ND(mean, SD))
@@ -164,16 +116,17 @@ public class Runner {
             String readFw = GSE.getReadSequence(fragmentSeq, readLength, false);
             String readRw = GSE.getReadSequence(fragmentSeq, readLength, true);
             // simulate mutations with required rate
-//            String[] mutatedReadFw = GSE.simulateMutations(readFw, mutationrate);
-//            String[] mutatedReadRw = GSE.simulateMutations(readRw, mutationrate);
-//
-//            readsFw.add(mutatedReadFw[0]);
-//            readsRw.add(mutatedReadRw[0]);
+            String[] mutatedReadFw = GSE.simulateMutations(readFw, mutationrate);
+            String[] mutatedReadRw = GSE.simulateMutations(readRw, mutationrate);
 
-            String[] tempReadFw = {readFw, ""};
-            String[] tempReadRw = {readRw, ""};
-            readsFw.add(tempReadFw[0]);
-            readsRw.add(tempReadRw[0]);
+            readsFw.add(mutatedReadFw[0]);
+            readsRw.add(mutatedReadRw[0]);
+
+            // Without mutation
+//            String[] tempReadFw = {readFw, ""};
+//            String[] tempReadRw = {readRw, ""};
+//            readsFw.add(tempReadFw[0]);
+//            readsRw.add(tempReadRw[0]);
 
             // readid chr gene transcript t_fw_regvec t_rw_regvec fw_regvec rw_regvec fw_mut rw_mut 0 19 ENSG00000104870 ENST00000221466 810-885 854-929 50017390-50017391|50017468-50017542 50017511-50017586 55
             int tFwRegVecStart = fragmentStart;
@@ -186,18 +139,12 @@ public class Runner {
             int rwRegVecStart = gse.getGenomicPosition(transcript_id, gene_id, tRwRegVecStart, true, referenceExon.strand);
             int rwRegVecEnd = gse.getGenomicPosition(transcript_id, gene_id, tRwRegVecEnd, false, referenceExon.strand);
 
-            String fwRegVec = gse.getGenomicRegionPosition(transcript_id, gene_id, fwRegVecStart, fwRegVecEnd, referenceExon.strand);
-            String rwRegVec = gse.getGenomicRegionPosition(transcript_id, gene_id, rwRegVecStart, rwRegVecEnd, referenceExon.strand);
+            String fwRegVec = gse.getGenomicRegionPosition(transcript_id, gene_id, fwRegVecStart, fwRegVecEnd);
+            String rwRegVec = gse.getGenomicRegionPosition(transcript_id, gene_id, rwRegVecStart, rwRegVecEnd);
 
             String mappingInfo = referenceExon.chr + "\t" + referenceExon.gene_id + "\t" + referenceExon.transcript_id
                     + "\t" + tFwRegVecStart + "-" + tFwRegVecEnd + "\t" + tRwRegVecStart + "-" + tRwRegVecEnd + "\t"
-                    + fwRegVec + "\t" + rwRegVec + "\t" + tempReadFw[1] + "\t" + tempReadRw[1];
-
-//            String fwRegVec = gse.getGenomicRegionPosition(transcript_id, gene_id, tFwRegVecStart, tFwRegVecEnd);
-//            String rwRegVec = gse.getGenomicRegionPosition(transcript_id, gene_id, tRwRegVecStart, tRwRegVecEnd);
-//            String mappingInfo = referenceExon.chr + "\t" + referenceExon.gene_id + "\t" + referenceExon.transcript_id
-//                    + "\t" + tFwRegVecStart + "-" + tFwRegVecEnd + "\t" + tRwRegVecStart + "-" + tRwRegVecEnd + "\t"
-//                    + fwRegVec + "\t" + rwRegVec + "\t" + tempReadFw[1] + "\t" + tempReadRw[1];
+                    + fwRegVec + "\t" + rwRegVec + "\t" + mutatedReadFw[1] + "\t" + mutatedReadRw[1];
             readMappingInfo.add(mappingInfo);
             // System.out.println("readFw: " + readFw + "(" + readFw.length() + ") mutated to " + mutatedReadFw[0] + "(" + mutatedReadFw[0].length() + ")");
             // System.out.println("readRw: " + readRw + "(" + readRw.length() + ") mutated to " + mutatedReadRw[0] + "(" + mutatedReadRw[0].length() + ")");
@@ -270,8 +217,7 @@ public class Runner {
         try {
             BufferedReader br = new BufferedReader(new FileReader(readcounts));
             String line = br.readLine(); // skip header
-            int linecounter = 0; // for error printing only
-            System.out.println("Begin: Parsing readcounts.");
+            // int linecounter = 0; // for error printing only
             while ((line = br.readLine()) != null) {
                 // gather readcounts line information
                 Object[] obj = new Object[3];
@@ -279,7 +225,7 @@ public class Runner {
                 obj[1] = line.split("\\t")[1]; // transcript_id
                 obj[2] = Integer.parseInt(line.split("\\t")[2]); // counts
                 // System.out.println("Readcount line: " + linecounter + " gene:" + obj[0] + " transcript: " + obj[1] + " counts: " + obj[2]);
-                linecounter++;
+                // linecounter++;
                 result.add(obj.clone());
             }
             br.close();
@@ -290,5 +236,75 @@ public class Runner {
         return result;
     }
 
+    private static void testCases(GSE gse) {
+        // ------------Test Cases----------------
+        String geneId = "ENSG00000241978";
+        String transcriptId = "ENST00000374525";
+        /*
+        TreeSet<Exon> exonsInTranscript = gse.getExonsByTranscriptAndGene(transcriptId, geneId);
+        String transcriptSequence = "";
+        Exon referenceExon = null;
+        for (Exon e : exonsInTranscript) {
+            String s = gse.getSequence(e.chr, e.start, e.end, e.strand);
+            transcriptSequence = transcriptSequence.concat(s);
+            referenceExon = new Exon(e);
+        }
+        String fragmentSeq = transcriptSequence.substring(2652, 2777);
+        String readFw = GSE.getReadSequence(fragmentSeq, 75, false);
+        String readRw = GSE.getReadSequence(fragmentSeq, 75, true);
+        */
+
+        int posStartTest1 = gse.getGenomicPosition(transcriptId, geneId, 2677, true, "+");
+        int posEndTest1 = gse.getGenomicPosition(transcriptId, geneId, 2752, false, "+");
+        String genomicRegionTest1 = gse.getGenomicRegionPosition(transcriptId, geneId, posStartTest1, posEndTest1);
+        // Expected Output: 112.918.703-112.918.778 (t.end = e.end)
+        if (!genomicRegionTest1.equals("112918703-112918778"))
+            System.err.println("Test1 Found:\t" + genomicRegionTest1 + "\n\texpected:\t112918703-112918778 (t.end = e.end)");
+
+        int posStartTest2 = gse.getGenomicPosition(transcriptId, geneId, 2573, true, "+");
+        int posEndTest2 = gse.getGenomicPosition(transcriptId, geneId, 2648, false, "+");
+        String genomicRegionTest2 = gse.getGenomicRegionPosition(transcriptId, geneId, posStartTest2, posEndTest2);
+        // Expected Output: 112.918.599-112.918.674 (t.start=e.end)
+        if (!genomicRegionTest2.equals("112918599-112918674"))
+            System.err.println("Test2 Found:\t" + genomicRegionTest2 + "\n\texpected:\t112918599-112918674 (t.start=e.end)");
+
+        geneId = "ENSG00000160767";
+        transcriptId = "ENST00000361361";
+        int posStartTest3 = gse.getGenomicPosition(transcriptId, geneId, 2682, true, "-");
+        int posEndTest3 = gse.getGenomicPosition(transcriptId, geneId, 2757, false, "-");
+        String genomicRegionTest3 = gse.getGenomicRegionPosition(transcriptId, geneId, posStartTest3, posEndTest3);
+        // Expected Output: 155.217.333-155.217.408
+        if (!genomicRegionTest3.equals("155217333-155217408"))
+            System.err.println("Test3 Found:\t" + genomicRegionTest3 + "\n\texpected:\t155217333-155217408 (- strand)");
+
+        int posStartTest4 = gse.getGenomicPosition(transcriptId, geneId, 739, true, "-");
+        int posEndTest4 = gse.getGenomicPosition(transcriptId, geneId, 814, false, "-");
+        String genomicRegionTest4 = gse.getGenomicRegionPosition(transcriptId, geneId, posStartTest4, posEndTest4);
+        // Expected Output: 155.223.964-155.223.986|155.224.191-155.224.244
+        if (!genomicRegionTest4.equals("155223964-155223986|155224191-155224244"))
+            System.err.println("Test4 Found:\t" + genomicRegionTest4 + "\n\texpected:\t155223964-155223986|155224191-155224244");
+
+        int posStartTest5 = gse.getGenomicPosition(transcriptId, geneId, 2020, true, "-");
+        int posEndTest5 = gse.getGenomicPosition(transcriptId, geneId, 2095, false, "-");
+        String genomicRegionTest5 = gse.getGenomicRegionPosition(transcriptId, geneId, posStartTest5, posEndTest5);
+        // Expected Output: 155.218.089-155.218.095|155.218.196-155.218.265
+        if (!genomicRegionTest5.equals("155218089-155218095|155218196-155218265"))
+            System.err.println("Test5 Found:\t" + genomicRegionTest5 + "\n\texpected:\t155218089-155218095|155218196-155218265");
+
+        geneId = "ENSG00000162946";
+        transcriptId = "ENST00000439617";
+        int posStartTest6 = gse.getGenomicPosition(transcriptId, geneId, 1680, true, "+");
+        int posEndTest6 = gse.getGenomicPosition(transcriptId, geneId, 1755, false, "+");
+        String genomicRegionTest6 = gse.getGenomicRegionPosition(transcriptId, geneId, posStartTest6, posEndTest6);
+        // Expected Output: 231906810-231906817|231930988-231931043|231935854-231935867 (3 exons)
+        if (!genomicRegionTest6.equals("231906810-231906817|231930988-231931043|231935854-231935867"))
+            System.err.println("Test6 Found:\t" + genomicRegionTest6 + "\n\texpected:\t231906810-231906817|231930988-231931043|231935854-231935867 (3 exons)");
+
+        //System.exit(1);
+        // System.out.println("Checking if Transcript occurs in gzip...");
+        // File gzip = new File("C:\\Users\\Gabriel\\Desktop\\GoBI\\Blatt2\\Homo_sapiens.GRCh37.75.cdna.all.fa.gz");
+        // GSE.checkTranscriptOccurenceInGzip("ENST00000515242", gzip);
+        // ------------END: Test Cases----------------
+    }
 
 }
