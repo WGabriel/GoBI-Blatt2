@@ -64,11 +64,12 @@ public class Runner {
         // ---Parse GTF---
         GSE gse = new GSE(fasta, fidx, gtf);
 
-        testCases(gse);
+        //testCases(gse);
 
         // ---For every ReadcountLine, there's one outputLine containing readsFw, readsRw, readMappingInfo--
         ArrayList<OutputLines> outLines = new ArrayList<>();
         for (Object[] obj : allReadcounts) {
+            System.out.println("Begin: getOutputLines for readcountLine GeneId:" + obj[0] + " transcriptId: " + obj[1] + " counts: " + obj[2]);
             String gene_id = (String) obj[0];
             String transcript_id = (String) obj[1];
             int counts = (Integer) obj[2];
